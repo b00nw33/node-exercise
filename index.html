@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <form onsubmit="ftnLogin(event)">
+        <label for="username">Username: </label>
+        <input type="text" id="username" required>
+        <br>
+        <label for="password">Password: </label>
+        <input type="password" id="password" required>
+        <br>
+        <button type="submit">Login</button>
+    </form>
+
+    <div id="message"></div>
+
+    <script>
+        async function ftnLogin(event) {
+            event.preventDefault();
+            const msgDiv = document.getElementById('message');
+            msgDiv.textContent = "Logging in...";
+
+            try {
+                const login_api = "http://127.0.0.1:8888/login";
+                const formData = {
+                    username: document.getElementById('username').value,
+                    password: document.getElementById('password').value,
+                };
+
+                const resp = await fetch(login_api, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(formData)
+                });
+
+                const data = await resp.json();
+
+                if (!data.ok) {
+                    switch (data.status) {
+                        case 403:
+                            throw new Error("Permission denied. Please try again.");
+                            break;
+                        case 500:
+                            throw new Error("Internal server error occured.");
+                            break;
+                        default:
+                            throw new Error("An unexpected error occured.");
+                    }
+                }
+
+                if (resp.ok) {
+                    msgDiv.textContent = "✅ Login successful!";
+                } else {
+                    msgDiv.textContent = `❌ ${data.error || "Login failed"}`;
+                }
+            } catch (error) {
+                msgDiv.textContent = "🌐 Network error. Is the server running?";
+                console.error("Fetch error:", error);
+            }
+        }
+    </script>
+</body>
+
+</html>
